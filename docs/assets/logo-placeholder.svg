@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" role="img" aria-label="Citizen Appeals AI Platform logo placeholder">
+  <rect width="640" height="200" rx="24" fill="#16355A"/>
+  <circle cx="100" cy="100" r="52" fill="#00B0AD"/>
+  <path d="M100 58 L126 74 L126 106 C126 130 112 146 100 152 C88 146 74 130 74 106 L74 74 Z" fill="#FBBD48"/>
+  <text x="180" y="88" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">Citizen Appeals AI Platform</text>
+  <text x="180" y="126" font-family="Inter, Arial, sans-serif" font-size="18" fill="#C8D8E8">Government-grade intake, AI routing, monitoring, and analytics</text>
+</svg>
