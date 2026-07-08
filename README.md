@@ -4,14 +4,6 @@
 	<img src="docs/assets/logo-placeholder.svg" alt="Citizen Appeals AI Platform logo placeholder" width="720" />
 </p>
 
-<p align="center">
-	<a href="https://github.com/kazutb-dev/citizen-appeals-ai-platform/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/kazutb-dev/citizen-appeals-ai-platform/ci.yml?branch=main&label=CI" alt="CI" /></a>
-	<img src="https://img.shields.io/badge/python-FastAPI%20%7C%20SQLAlchemy-16355A" alt="Backend" />
-	<img src="https://img.shields.io/badge/frontend-React%20%7C%20TypeScript-00B0AD" alt="Frontend" />
-	<img src="https://img.shields.io/badge/ai-local%20LLM%20only-FBBD48" alt="Local AI only" />
-	<img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" />
-</p>
-
 AI-powered government platform for centralized intake, processing, routing, monitoring, and analysis of citizen appeals. The current product focus is healthcare, while the core architecture is designed to expand to other public-sector agencies without rewriting the platform foundation.
 
 ## Project Overview
