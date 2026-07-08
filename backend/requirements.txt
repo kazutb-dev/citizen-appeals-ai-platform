@@ -2,7 +2,7 @@ fastapi>=0.110,<1.0
 uvicorn[standard]>=0.29
 sqlalchemy[asyncio]>=2.0.29
 asyncpg>=0.29
-alembic>=1.13
+alembic>=1.18.5
 # Python-клиент pgvector (само расширение PostgreSQL — 0.5+ в образе pg16)
 pgvector>=0.3,<0.5
 pydantic[email]>=2.7
