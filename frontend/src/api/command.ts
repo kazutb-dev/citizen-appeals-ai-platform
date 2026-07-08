@@ -1,84 +1,15 @@
 import { api } from './client'
-
-export interface RegionHeat {
-  region: string
-  total: number
-  critical: number
-  lat: number | null
-  lng: number | null
-}
-
-export interface HospitalRank {
-  hospital_id: number
-  name: string
-  total: number
-  critical: number
-}
-
-export interface CategoryCount {
-  category: string
-  label: string
-  count: number
-}
-
-export interface SituationSnapshot {
-  generated_at: string
-  appeals_today: number
-  appeals_today_trend_pct: number
-  critical_open: number
-  escalations: number
-  sla_violations: number
-  campaigns: number
-  duplicates: number
-  medicine_shortage: number
-  emergency_incidents: number
-  ai_runs_today: number
-  region_heatmap: RegionHeat[]
-  hospital_ranking: HospitalRank[]
-  category_breakdown: CategoryCount[]
-}
-
-export interface ExecutiveBrief {
-  generated_at: string
-  ai_available: boolean
-  summary: string | null
-  stats: Record<string, number>
-  top_categories: CategoryCount[]
-  top_regions: RegionHeat[]
-}
-
-export interface RootCause {
-  cause: string
-  likelihood: number
-  evidence: string
-}
-
-export interface RootCauseReport {
-  category: string
-  category_label: string
-  sample_size: number
-  summary: string
-  root_causes: RootCause[]
-  recommended_actions: string[]
-  ai_available: boolean
-}
-
-export interface TimelineEvent {
-  timestamp: string
-  kind: string
-  title: string
-  appeal_id: number | null
-  category: string | null
-  status: string | null
-  detail: string | null
-}
-
-export interface PatientTimeline {
-  requester_id: number
-  full_name: string
-  total_appeals: number
-  events: TimelineEvent[]
-}
+import type {
+  AiActionsOut,
+  AppealMapPoint,
+  CategoryCount,
+  CriticalQueueItem,
+  ExecutiveBrief,
+  HotspotsOut,
+  PatientTimeline,
+  RootCauseReport,
+  SituationSnapshot,
+} from '../types/situation'
 
 export async function fetchSituation(tenantId?: number): Promise<SituationSnapshot> {
   const { data } = await api.get('/command-center/situation', {
@@ -103,3 +34,39 @@ export async function fetchPatientTimeline(requesterId: number): Promise<Patient
   const { data } = await api.get(`/command-center/patient-timeline/${requesterId}`)
   return data
 }
+
+export async function fetchCriticalQueue(tenantId?: number): Promise<CriticalQueueItem[]> {
+  const { data } = await api.get('/command-center/critical-queue', {
+    params: tenantId ? { tenant_id: tenantId } : {},
+  })
+  return data
+}
+
+export async function fetchAppealsMap(params: {
+  tenant_id?: number
+  period_hours?: number
+  region?: string
+  risk_level?: string
+  status?: string
+} = {}): Promise<AppealMapPoint[]> {
+  const { data } = await api.get('/command-center/appeals-map', { params })
+  return data
+}
+
+export async function fetchHotspots(params: {
+  tenant_id?: number
+  period_hours?: number
+} = {}): Promise<HotspotsOut> {
+  const { data } = await api.get('/command-center/hotspots', { params })
+  return data
+}
+
+export async function fetchAiActions(params: {
+  tenant_id?: number
+  period_hours?: number
+} = {}): Promise<AiActionsOut> {
+  const { data } = await api.get('/command-center/ai-actions', { params })
+  return data
+}
+
+export type { CategoryCount }

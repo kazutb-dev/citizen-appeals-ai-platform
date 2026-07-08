@@ -1,11 +1,11 @@
-"""AI Executive Brief — утренняя управленческая сводка (локальный LLM).
+"""AI Executive Brief — управленческие AI-сводки и рекомендации (локальный LLM).
 
 Считает сводку по РЕАЛЬНЫМ агрегатам обращений (передаются вызывающим кодом) и
 формулирует деловой текст через локальную модель. Синтетику не генерирует: если
 данных нет — текст это отражает; если LLM недоступен — вызывающий код вернёт
 агрегаты без текста (честный empty-state).
 """
-from app.agents.llm_client import complete
+from app.agents.llm_client import complete, complete_json
 from app.core.i18n import language_directive
 
 BRIEF_SYSTEM_BASE = (
@@ -31,6 +31,25 @@ BRIEF_PROMPT = """Сформируй краткую управленческую
 - укажи регион или направление наибольшего риска;
 - опирайся ТОЛЬКО на приведённые данные, ничего не выдумывай;
 - ответь обычным текстом (без markdown, без списков)."""
+
+ACTION_PROMPT = """Сформируй до 3 коротких ОПЕРАЦИОННЫХ рекомендаций для ситуационного центра.
+
+СВОДКА:
+{stats_block}
+
+ПРОБЛЕМНЫЕ ТОЧКИ:
+{hotspots_block}
+
+КРИТИЧЕСКАЯ ОЧЕРЕДЬ:
+{queue_block}
+
+Требования:
+- только конкретные действия, без поэзии и без общих фраз;
+- каждая рекомендация должна иметь поля: problem, action, assignee;
+- assignee = ответственная роль или подразделение;
+- опирайся ТОЛЬКО на данные выше;
+- верни строго JSON вида {{"items": [{{"problem": "...", "action": "...", "assignee": "..."}}]}}.
+"""
 
 
 def _fmt_stats(stats: dict) -> str:
@@ -66,3 +85,46 @@ async def generate_brief_text(
     )
     system = f"{BRIEF_SYSTEM_BASE} {language_directive(lang)}"
     return (await complete(prompt, max_tokens=400, system=system)).strip()
+
+
+def _fmt_hotspots(hotspots: list[dict]) -> str:
+    return "\n".join(
+        f"- {item.get('name')}: критичных {item.get('critical', 0)}, просроченных {item.get('overdue', 0)}, всего {item.get('total', 0)}"
+        for item in hotspots[:5]
+    ) or "- нет данных"
+
+
+def _fmt_queue(queue: list[dict]) -> str:
+    return "\n".join(
+        f"- #{item.get('id')}: {item.get('region')} / {item.get('category_label') or item.get('category')} / {item.get('status')} / ответственный: {item.get('responsible') or 'не назначен'} / приоритет: {item.get('priority')}"
+        for item in queue[:6]
+    ) or "- нет данных"
+
+
+async def generate_action_recommendations(
+    stats: dict, hotspots: list[dict], queue: list[dict], lang: str = "ru"
+) -> list[dict]:
+    prompt = ACTION_PROMPT.format(
+        stats_block=_fmt_stats(stats),
+        hotspots_block=_fmt_hotspots(hotspots),
+        queue_block=_fmt_queue(queue),
+    )
+    system = (
+        "Ты — операционный координатор ситуационного центра здравоохранения. "
+        "Даёшь только короткие исполнимые рекомендации. "
+        f"{language_directive(lang)}"
+    )
+    payload = await complete_json(prompt, max_tokens=500, system=system)
+    items = payload.get("items") if isinstance(payload, dict) else None
+    if not isinstance(items, list):
+        return []
+    cleaned: list[dict] = []
+    for item in items[:3]:
+        if not isinstance(item, dict):
+            continue
+        problem = str(item.get("problem") or "").strip()
+        action = str(item.get("action") or "").strip()
+        assignee = str(item.get("assignee") or "").strip()
+        if problem and action and assignee:
+            cleaned.append({"problem": problem, "action": action, "assignee": assignee})
+    return cleaned
