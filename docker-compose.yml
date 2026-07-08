@@ -1,0 +1,162 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ncaip_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ncaip_db
+      POSTGRES_USER: ncaip_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ncaip_user -d ncaip_db']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: ncaip_redis
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Локальный LLM-инференс (только в инфраструктуре государства; облако запрещено).
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ncaip_ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+    expose:
+      - '11434'
+    healthcheck:
+      test: ['CMD-SHELL', 'ollama list >/dev/null 2>&1 || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    # GPU (опционально, требует NVIDIA Container Toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # Одноразовая загрузка локальной модели в Ollama (идемпотентно: пропускает уже скачанную).
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ncaip_ollama_init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ['/bin/sh', '-c']
+    command: ['ollama pull ${LLM_LOCAL_MODEL:-qwen2.5:7b-instruct}']
+    restart: 'no'
+
+  backend:
+    build: ./backend
+    container_name: ncaip_backend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - uploads:/app/uploads
+    expose:
+      - '8000'
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8000/api/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    build: ./backend
+    container_name: ncaip_worker
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    command: arq app.worker.WorkerSettings
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - uploads:/app/uploads
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import os, redis; redis.from_url(os.environ[''REDIS_URL'']).ping()" || exit 1',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Значение подставляется из корневого .env (Docker Compose читает его
+        # автоматически). Ключ Yandex Maps встраивается в бандл на этапе сборки.
+        VITE_YANDEX_API_KEY: ${VITE_YANDEX_API_KEY:-}
+    container_name: ncaip_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    expose:
+      - '80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ncaip_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    # По умолчанию — HTTP (без TLS-сертификатов). Для HTTPS используйте
+    # docker-compose.prod.yml (монтирует nginx.prod.conf + ./ssl и порт 443).
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - '80:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  pgdata:
+  redisdata:
+  hf_cache:
+  uploads:
+  ollama_models:

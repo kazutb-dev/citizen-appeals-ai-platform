@@ -1,0 +1,21 @@
+# Продакшен-надстройка MedHubHAQ: HTTPS.
+#
+# Базовый docker-compose.yml поднимает nginx в режиме HTTP (порт 80, без TLS).
+# Этот overlay переключает nginx на HTTPS: монтирует nginx.prod.conf и сертификаты
+# из ./ssl, открывает порт 443.
+#
+# TLS-сертификаты НЕ в репозитории — положите в ./ssl/ перед запуском:
+#   ssl/fullchain.pem   — цепочка сертификатов
+#   ssl/private.key     — приватный ключ
+#
+# Запуск:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  nginx:
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/ssl:ro
+    ports:
+      - '80:80'
+      - '443:443'
