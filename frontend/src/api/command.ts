@@ -46,6 +46,7 @@ export async function fetchAppealsMap(params: {
   tenant_id?: number
   period_hours?: number
   region?: string
+  hospital_id?: number
   risk_level?: string
   status?: string
 } = {}): Promise<AppealMapPoint[]> {

@@ -102,6 +102,8 @@ class AppealMapPoint(BaseModel):
     id: int
     title: str
     region: str
+    hospital_id: int | None = None
+    hospital_name: str | None = None
     category: str
     category_label: str
     status: str
@@ -381,6 +383,7 @@ async def appeals_map(
     tenant_id: int | None = Query(None),
     period_hours: int = Query(24, ge=1, le=720),
     region: str | None = Query(None),
+    hospital_id: int | None = Query(None, ge=1),
     risk_level: str | None = Query(None),
     status: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
@@ -388,21 +391,32 @@ async def appeals_map(
 ) -> list[AppealMapPoint]:
     base = [Appeal.tenant_id == tenant_id] if tenant_id is not None else []
     since = datetime.utcnow() - timedelta(hours=period_hours)
-    stmt = select(Appeal).where(*base, Appeal.latitude.is_not(None), Appeal.longitude.is_not(None), Appeal.submitted_at >= since)
+    stmt = (
+        select(Appeal, Hospital.name)
+        .outerjoin(Hospital, Appeal.hospital_id == Hospital.id)
+        .where(
+            *base,
+            Appeal.latitude.is_not(None),
+            Appeal.longitude.is_not(None),
+            Appeal.submitted_at >= since,
+        )
+    )
     if region:
         stmt = stmt.where(Appeal.region == region)
+    if hospital_id:
+        stmt = stmt.where(Appeal.hospital_id == hospital_id)
     if risk_level:
         stmt = stmt.where(Appeal.risk_level == risk_level)
     if status:
         stmt = stmt.where(Appeal.status == status)
-    rows = (
-        await db.execute(stmt.order_by(Appeal.submitted_at.desc()).limit(500))
-    ).scalars().all()
+    rows = (await db.execute(stmt.order_by(Appeal.submitted_at.desc()).limit(500))).all()
     return [
         AppealMapPoint(
             id=appeal.id,
             title=appeal.title,
             region=appeal.region,
+            hospital_id=appeal.hospital_id,
+            hospital_name=hospital_name,
             category=appeal.category,
             category_label=_category_label(appeal.category),
             status=appeal.status,
@@ -412,7 +426,7 @@ async def appeals_map(
             longitude=appeal.longitude,
             location_name=appeal.location_name,
         )
-        for appeal in rows
+        for appeal, hospital_name in rows
         if appeal.latitude is not None and appeal.longitude is not None
     ]
 

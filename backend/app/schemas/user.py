@@ -28,8 +28,13 @@ class UserOut(BaseModel):
     position: str | None = None
     department_id: int | None = None
     requester_id: int | None = None
+    preferred_language: str | None = None
     is_active: bool
     last_login_at: datetime | None = None
+
+
+class UserLanguageUpdate(BaseModel):
+    preferred_language: str = Field(min_length=2, max_length=5)
 
 
 class UserAdminUpdate(BaseModel):

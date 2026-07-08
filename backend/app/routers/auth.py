@@ -20,7 +20,13 @@ from app.data.categories import REQUESTER_TYPES
 from app.database import get_db
 from app.models.requester import Requester
 from app.models.user import User
-from app.schemas.user import LoginRequest, LoginResponse, RegisterRequest, UserOut
+from app.schemas.user import (
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest,
+    UserLanguageUpdate,
+    UserOut,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -116,6 +122,21 @@ async def refresh(
 
 @router.get("/me", response_model=UserOut)
 async def me(user: User = Depends(get_current_user)) -> UserOut:
+    return UserOut.model_validate(user)
+
+
+@router.patch("/me/language", response_model=UserOut)
+async def update_my_language(
+    payload: UserLanguageUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> UserOut:
+    lang = payload.preferred_language.strip().lower().replace("_", "-")[:2]
+    if lang not in {"kk", "ru", "en"}:
+        raise ConflictError("Недопустимый язык интерфейса")
+    user.preferred_language = lang
+    await db.commit()
+    await db.refresh(user)
     return UserOut.model_validate(user)
 
 

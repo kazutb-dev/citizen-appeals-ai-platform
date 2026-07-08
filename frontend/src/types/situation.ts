@@ -82,6 +82,8 @@ export interface AppealMapPoint {
   id: number
   title: string
   region: string
+  hospital_id?: number | null
+  hospital_name?: string | null
   category: string
   category_label: string
   status: string

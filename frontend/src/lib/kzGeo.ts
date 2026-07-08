@@ -26,6 +26,12 @@ export const KZ_REGION_COORDS: Record<string, [number, number]> = {
 // Географический центр Казахстана — запасные координаты.
 export const KZ_CENTER: [number, number] = [48.0196, 66.9237]
 
+// Границы Казахстана для ограничения operational-карты.
+export const KZ_BOUNDS: [[number, number], [number, number]] = [
+  [40.4, 46.2],
+  [55.9, 87.4],
+]
+
 /** Координаты центра региона по имени (с нечётким совпадением); иначе — центр РК. */
 export function regionCenter(name?: string | null): [number, number] {
   if (!name) return KZ_CENTER
@@ -34,4 +40,13 @@ export function regionCenter(name?: string | null): [number, number] {
     if (name.includes(key) || key.includes(name)) return coords
   }
   return KZ_CENTER
+}
+
+/** Квадрат фокуса вокруг центра региона: подходит для auto-fit города/области. */
+export function regionBounds(name?: string | null, radiusDeg = 0.55): [[number, number], [number, number]] {
+  const [lat, lng] = regionCenter(name)
+  return [
+    [lat - radiusDeg, lng - radiusDeg],
+    [lat + radiusDeg, lng + radiusDeg],
+  ]
 }

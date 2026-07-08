@@ -24,6 +24,7 @@ export interface User {
   email: string
   full_name: string
   role: UserRole
+  preferred_language?: string | null
   position?: string | null
   department_id?: number | null
   requester_id?: number | null
