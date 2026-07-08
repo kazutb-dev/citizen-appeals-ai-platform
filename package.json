@@ -1,0 +1,23 @@
+{
+  "name": "citizen-appeals-ai-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Repository-level developer tooling for the Citizen Appeals AI Platform.",
+  "scripts": {
+    "prepare": "husky",
+    "format": "prettier --write \"**/*.{md,json,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{md,json,yml,yaml}\"",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "lint-staged": "lint-staged"
+  },
+  "devDependencies": {
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3"
+  },
+  "lint-staged": {
+    "*.{md,json,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

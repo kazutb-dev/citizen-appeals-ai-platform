@@ -1,0 +1,17 @@
+name: Question
+description: Ask a usage or architecture question.
+title: 'question: '
+labels: [documentation]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Ask a specific question and include relevant context.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Link files, routes, environment details, or screenshots if useful.

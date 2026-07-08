@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/kazutb-dev/citizen-appeals-ai-platform/security/policy
+    about: Report vulnerabilities privately through the security process.
+  - name: Documentation
+    url: https://github.com/kazutb-dev/citizen-appeals-ai-platform/blob/main/README.md
+    about: Read the project documentation before opening a general issue.

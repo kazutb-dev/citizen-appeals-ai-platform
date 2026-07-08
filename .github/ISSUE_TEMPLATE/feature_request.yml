@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a new capability or architectural improvement.
+title: 'feat: '
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What operational or product problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: User and operational impact
+      description: Explain impact on citizens, operators, analysts, or administrators.

@@ -1,0 +1,28 @@
+labels:
+  - name: bug
+    color: d73a4a
+    description: Something is not working correctly.
+  - name: enhancement
+    color: a2eeef
+    description: New capability or workflow improvement.
+  - name: documentation
+    color: 0075ca
+    description: Documentation work.
+  - name: security
+    color: b60205
+    description: Security-related work item.
+  - name: ai
+    color: 5319e7
+    description: AI agent, model, or RAG scope.
+  - name: integrations
+    color: 1d76db
+    description: External systems and connectors.
+  - name: backend
+    color: 0e8a16
+    description: Backend API or worker scope.
+  - name: frontend
+    color: fbca04
+    description: Frontend application scope.
+  - name: operations
+    color: cfd3d7
+    description: Infrastructure, deployment, or monitoring work.

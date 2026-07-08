@@ -1,0 +1,11 @@
+milestones:
+  - title: Repository Foundation
+    description: Governance, CI, docs, and engineering standards.
+  - title: Unified Intake Core
+    description: Channel-aware intake, geolocation, and idempotency.
+  - title: Real Integration Layer
+    description: Replace mock connectors with production-ready integration architecture.
+  - title: AI Admin Platform
+    description: Per-agent controls, testing, telemetry, and observability.
+  - title: Geographic Operations
+    description: Facility map, appeal map, and 2GIS-driven data collection.
